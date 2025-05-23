@@ -21,6 +21,14 @@ document.addEventListener("DOMContentLoaded", function () {
     notifications: document.querySelector(".notifications"),
   };
 
+  document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', (e) => {
+    e.preventDefault(); // Prevent default if handling via JS
+    const section = item.getAttribute('data-section');
+    // Logic to load section
+    console.log(`Navigating to ${section}`);
+  });
+});
   // Check if critical elements exist
   if (!elements.sidebar || !elements.activityList || !elements.mainContent) {
     console.error("Critical DOM elements missing");
@@ -232,39 +240,40 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // Toggle mobile menu
-  function toggleMobileMenu(e) {
-    if (!elements.sidebar) return;
-    e.stopPropagation();
-    elements.sidebar.classList.toggle("active");
-  }
+  // Mobile menu functionality
+const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+const sidebar = document.querySelector('.sidebar');
 
-  // Close mobile menu
-  function closeMobileMenu() {
-    if (elements.sidebar) elements.sidebar.classList.remove("active");
-  }
+function toggleMobileMenu() {
+  sidebar.classList.toggle('active');
+  document.body.classList.toggle('menu-open');
+  
+  // Change icon from bars to times
+  const icon = mobileMenuToggle.querySelector('i');
+  icon.classList.toggle('fa-bars');
+  icon.classList.toggle('fa-times');
+}
 
-  // Toggle theme
-  function toggleTheme() {
-    if (!elements.themeToggle) return;
-    document.body.classList.toggle("dark-mode");
-    const icon = elements.themeToggle.querySelector("i");
-    if (icon) {
-      icon.classList.toggle(
-        "fa-moon",
-        !document.body.classList.contains("dark-mode")
-      );
-      icon.classList.toggle(
-        "fa-sun",
-        document.body.classList.contains("dark-mode")
-      );
+// Event listeners
+mobileMenuToggle.addEventListener('click', toggleMobileMenu);
+
+// Close menu when clicking outside
+document.addEventListener('click', (e) => {
+  if (!sidebar.contains(e.target) && 
+      !mobileMenuToggle.contains(e.target) &&
+      sidebar.classList.contains('active')) {
+    toggleMobileMenu();
+  }
+});
+
+// Close menu when clicking nav items
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    if (window.innerWidth <= 768 && sidebar.classList.contains('active')) {
+      toggleMobileMenu();
     }
-    localStorage.setItem(
-      "theme",
-      document.body.classList.contains("dark-mode") ? "dark" : "light"
-    );
-  }
-
+  });
+});
   // Switch content sections
   function switchSection(sectionId) {
     elements.contentSections.forEach((section) => {
@@ -386,6 +395,8 @@ document.addEventListener("DOMContentLoaded", function () {
         alert(`Navigating to ${linkText}`);
       });
     });
+
+
 
     // Close mobile menu on outside click
     const closeSidebarOnOutsideClick = debounce(function (event) {
