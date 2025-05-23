@@ -22,7 +22,12 @@ document.addEventListener("DOMContentLoaded", function () {
   };
 
   // Check if critical elements exist
-  if (!elements.sidebar || !elements.activityList || !elements.mainContent) {
+  if (
+    !elements.sidebar ||
+    !elements.activityList ||
+    !elements.mainContent ||
+    !elements.mobileMenuToggle
+  ) {
     console.error("Critical DOM elements missing");
     return;
   }
@@ -116,7 +121,6 @@ document.addEventListener("DOMContentLoaded", function () {
   function toggleClockStatus() {
     state.isClockedIn = !state.isClockedIn;
     localStorage.setItem("isClockedIn", state.isClockedIn);
-
     if (state.isClockedIn) {
       startTimer();
       addActivityLog(
@@ -144,27 +148,22 @@ document.addEventListener("DOMContentLoaded", function () {
       hour: "2-digit",
       minute: "2-digit",
     });
-
     const activityTypes = {
       "clock-in": "completed",
       "clock-out": "uploaded",
       default: "chat",
     };
-
     const activityClass = activityTypes[type] || activityTypes["default"];
-
     const activityItem = document.createElement("li");
     activityItem.innerHTML = `
       <i class="fas ${iconClass} ${activityClass}"></i>
       <span>${text}</span>
       <small>${timeString}</small>
     `;
-
     elements.activityList.insertBefore(
       activityItem,
       elements.activityList.firstChild
     );
-
     if (elements.activityList.children.length > 10) {
       elements.activityList.removeChild(elements.activityList.lastChild);
     }
@@ -175,7 +174,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (elements.pendingTasks) elements.pendingTasks.textContent = "5";
     if (elements.totalDocs) elements.totalDocs.textContent = "12";
     if (elements.leaveDays) elements.leaveDays.textContent = "3";
-
     const sampleActivities = [
       {
         text: 'Completed task "Quarterly Report"',
@@ -202,7 +200,6 @@ document.addEventListener("DOMContentLoaded", function () {
         time: "May 16",
       },
     ];
-
     sampleActivities.forEach((activity) => {
       const activityItem = document.createElement("li");
       activityItem.innerHTML = `
@@ -232,16 +229,28 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+
+
+
+
+  
   // Toggle mobile menu
   function toggleMobileMenu(e) {
     if (!elements.sidebar) return;
     e.stopPropagation();
     elements.sidebar.classList.toggle("active");
+    console.log(
+      "Mobile menu toggled:",
+      elements.sidebar.classList.contains("active")
+    );
   }
 
   // Close mobile menu
   function closeMobileMenu() {
-    if (elements.sidebar) elements.sidebar.classList.remove("active");
+    if (elements.sidebar) {
+      elements.sidebar.classList.remove("active");
+      console.log("Mobile menu closed");
+    }
   }
 
   // Toggle theme
@@ -267,20 +276,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Switch content sections
   function switchSection(sectionId) {
+    console.log("Switching to section:", sectionId);
+    const targetSection = document.getElementById(sectionId);
+    if (!targetSection) {
+      console.warn(`Section with ID ${sectionId} not found`);
+      return;
+    }
     elements.contentSections.forEach((section) => {
       section.classList.remove("active");
     });
-
-    const targetSection = document.getElementById(sectionId);
-    if (targetSection) targetSection.classList.add("active");
-
+    targetSection.classList.add("active");
     elements.navItems.forEach((item) => {
       item.classList.toggle(
         "active",
         item.getAttribute("data-section") === sectionId
       );
     });
-
     if (window.innerWidth <= 768) closeMobileMenu();
   }
 
@@ -327,8 +338,9 @@ document.addEventListener("DOMContentLoaded", function () {
       elements.sidebarToggle.addEventListener("click", toggleSidebar);
       elements.sidebarToggle.addEventListener("touchend", toggleSidebar);
     }
-    if (elements.themeToggle)
+    if (elements.themeToggle) {
       elements.themeToggle.addEventListener("click", toggleTheme);
+    }
     if (elements.mobileMenuToggle) {
       elements.mobileMenuToggle.addEventListener("click", toggleMobileMenu);
       elements.mobileMenuToggle.addEventListener("touchend", toggleMobileMenu);
@@ -387,7 +399,6 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
 
-    // Close mobile menu on outside click
     const closeSidebarOnOutsideClick = debounce(function (event) {
       if (
         window.innerWidth <= 768 &&
@@ -403,7 +414,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.addEventListener("click", closeSidebarOnOutsideClick);
     document.addEventListener("touchend", closeSidebarOnOutsideClick);
 
-    // Close mobile menu on main content click
     elements.mainContent.addEventListener("click", function () {
       if (
         window.innerWidth <= 768 &&
@@ -413,10 +423,8 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
 
-    // Handle window resize
     window.addEventListener("resize", debounce(handleResize, 100));
 
-    // Load saved theme
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
       document.body.classList.add("dark-mode");
